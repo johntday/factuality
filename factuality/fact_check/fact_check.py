@@ -2,7 +2,8 @@ import asyncio
 from enum import Enum
 import os
 from urllib.parse import urlparse
-from gpt_json import GPTJSON, GPTMessage, GPTMessageRole
+# from gpt_json import GPTJSON, GPTMessage, GPTMessageRole
+from openai import OpenAI
 from pydantic import BaseModel
 from factuality.claim_splitter.claim_splitter import Claim
 from factuality.search.search import SearchResults
@@ -42,13 +43,9 @@ def split_with_overlap(text, chunk_size, overlap):
 
 
 SYSTEM_PROMPT = """
-You are a source checker you will try to verify a claim by checking the source. Either you answer with verified, inconclusive or
+You are a source checker you will try to verify a claim by checking the source. You MUST answer with verified, inconclusive or
 rejected. For inconclusive you will provide no source quote, for rejected and verified you will provide a source
-quoute. Extract the quote directly from the text without modification.
-
-Respond with the following JSON schema:
-
-{json_schema}
+quote. Extract the quote directly from the text without modification.
 """
 
 
@@ -74,19 +71,32 @@ async def check_claim(
         ):
             try:
                 logger.info(f"Checking claim", claim=claim.claim, source=source.url)
-                gpt_json = GPTJSON[Result](oai_key, model=oai_model)
-                payload = await gpt_json.run(
+                # gpt_json = GPTJSON[Result](oai_key, model=oai_model)
+                # payload = await gpt_json.run(
+                #     messages=[
+                #         GPTMessage(
+                #             role=GPTMessageRole.SYSTEM,
+                #             content=SYSTEM_PROMPT,
+                #         ),
+                #         GPTMessage(
+                #             role=GPTMessageRole.USER,
+                #             content=f"claim: {claim.claim} source: {chunk}",
+                #         ),
+                #     ]
+                # )
+                client = OpenAI()
+
+                completion = client.beta.chat.completions.parse(
+                    model=oai_model,
                     messages=[
-                        GPTMessage(
-                            role=GPTMessageRole.SYSTEM,
-                            content=SYSTEM_PROMPT,
-                        ),
-                        GPTMessage(
-                            role=GPTMessageRole.USER,
-                            content=f"claim: {claim.claim} source: {chunk}",
-                        ),
-                    ]
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"<claim>{claim.claim}</claim><source>{chunk}</source>"},
+                    ],
+                    response_format=Result,
                 )
+
+                payload = completion.choices[0].message.parsed
+
                 if (
                     payload.response.result == ResultType.REJECTED
                     or payload.response.result == ResultType.VERIFIED

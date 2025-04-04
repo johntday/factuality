@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from factuality.search.google.google_search import GoogleSearchClient
 from urllib.parse import urlparse
 
+from factuality.search.tavily.tavily_search import TavilySearchClient
 from factuality.utils.options import Options
 import structlog
 
@@ -19,7 +20,7 @@ class SearchResults(BaseModel):
 
 class SearchClient:
     def search(
-        self, search_engine: Literal["google", "bing"], query: str, reference: str, options: Options
+        self, search_engine: Literal["google", "bing", "tavily"], query: str, reference: str, options: Options
     ) -> list[SearchResults]:
         logger.info(f"Searching for query", query=query, search_engine=search_engine)
         search_results = []
@@ -48,6 +49,20 @@ class SearchClient:
             search_results = [
                 {"url": search_result["link"], "title": search_result["title"]}
                 for search_result in search_results_raw["items"]
+                if search_result.get("fileFormat") is None
+            ]
+        elif search_engine == "tavily":
+            search_results_raw = TavilySearchClient(
+                options.tavily_api_key
+            ).search(
+                query,
+                options.maximum_search_results,
+                options.allowlist,
+                options.blocklist,
+            )
+            search_results = [
+                {"url": search_result["link"], "title": search_result["title"]}
+                for search_result in search_results_raw["results"]
                 if search_result.get("fileFormat") is None
             ]
         else:

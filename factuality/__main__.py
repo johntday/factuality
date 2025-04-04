@@ -53,7 +53,7 @@ def main():
     )
     parser.add_argument(
         "--oai-api-key",
-        required=True,
+        required=False,
         type=str,
         default=os.getenv("OPENAI_API_KEY"),
         help="OpenAI API key",
@@ -66,7 +66,6 @@ def main():
         ),
         help="List of domains to allow for search results (allowlist takes precedence over blocklist). Default is empty. Format ['domain1.com', 'domain2.com']",
     )
-    
     parser.add_argument(
         "--blocklist",
         type=str,
@@ -75,7 +74,6 @@ def main():
         ),
         help="List of domains to block for search results (allowlist takes precedence over blocklist). Default is empty. Format ['domain1.com', 'domain2.com']",
     )
-    
     parser.add_argument(
         "--validation-checks-per-claim",
         type=int,
@@ -111,6 +109,12 @@ def main():
         type=str,
         default=os.getenv("GOOGLE_SEARCH_API_KEY"),
         help="Google Search API Key",
+    )
+    parser.add_argument(
+        "--tavily-api-key",
+        type=str,
+        default=os.getenv("TAVILY_API_KEY"),
+        help="Tavily Search API Key",
     )
     parser.add_argument(
         "--google-search-cx",
@@ -169,6 +173,9 @@ def main():
 
     args = parser.parse_args()
 
+    if not os.getenv('OPENAI_API_KEY') and not args.oai_api_key:
+        raise ValueError("At least one of 'env OPENAI_API_KEY' or 'cmd oai_api_key' must be set")
+
     options = Options(
         oai_api_key=args.oai_api_key,
         bing_search_v7_subscription_key=args.bing_search_v7_subscription_key,
@@ -187,6 +194,7 @@ def main():
         validation_checks_per_claim=args.validation_checks_per_claim,
         same_site_allowed=args.same_site_allowed,
         google_search_api_key=args.google_search_api_key,
+        tavily_api_key=args.tavily_api_key,
         google_search_cx=args.google_search_cx,
     )
     logging.setup_structlog()

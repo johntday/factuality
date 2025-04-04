@@ -22,6 +22,7 @@ class Options:
         same_site_allowed = f"{Defaults.SAME_SITE_ALLOWED.value}",
         google_search_api_key = None,
         google_search_cx = None,
+        tavily_api_key = None,
     ):
         self.oai_api_key = oai_api_key
         self.bing_search_v7_subscription_key = bing_search_v7_subscription_key
@@ -41,3 +42,4 @@ class Options:
         self.same_site_allowed = True if same_site_allowed.lower() == 'true' else False if same_site_allowed.lower() == 'false' else None
         self.google_search_api_key = google_search_api_key
         self.google_search_cx = google_search_cx
+        self.tavily_api_key = tavily_api_key
