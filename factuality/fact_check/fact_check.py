@@ -97,28 +97,31 @@ async def check_claim(
 
                 payload = completion.choices[0].message.parsed
 
-                if (
-                    payload.response.result == ResultType.REJECTED
-                    or payload.response.result == ResultType.VERIFIED
-                ) and payload.response.source_quote is not None:
-                    logger.info(
-                        f"Claim checked",
-                        claim=claim.claim,
-                        source=source.url,
-                        result=payload.response.result,
-                        source_quote=payload.response.source_quote,
-                    )
-                    sources_used.append(urlparse(source.url)[1])
+                if payload.result == ResultType.VERIFIED or payload.result == ResultType.REJECTED:
                     claim_checks.append(
                         ClaimChecked(
                             claim=claim.claim,
                             reference=claim.reference,
                             verification_query=claim.verification_query,
-                            result=payload.response.result,
+                            result=payload.result,
                             source_reference=source.url,
-                            source_quote=payload.response.source_quote,
+                            source_quote=payload.source_quote,
                         )
                     )
+                    sources_used.append(urlparse(source.url)[1])
+                    break
+                elif payload.result == ResultType.INCONCLUSIVE:
+                    claim_checks.append(
+                        ClaimChecked(
+                            claim=claim.claim,
+                            reference=claim.reference,
+                            verification_query=claim.verification_query,
+                            result=payload.result,
+                            source_reference=source.url,
+                            source_quote=None,
+                        )
+                    )
+                    sources_used.append(urlparse(source.url)[1])
                     break
             except Exception as e:
                 logger.warning(

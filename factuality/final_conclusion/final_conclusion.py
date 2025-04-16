@@ -47,5 +47,5 @@ async def final_conclusion(investigation_results: str, oai_key: str, oai_model: 
     #         )
     #     ]
     # )
-    logger.info(f"Final conclusion", score=payload.response.score if payload.response else None)
-    return payload.response
+    logger.info(f"Final conclusion", score=payload.score)
+    return payload

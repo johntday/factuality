@@ -4,6 +4,7 @@ import os
 import re
 from dotenv import load_dotenv
 
+from factuality.api.gist import GistManager
 from factuality.utils import logging
 from factuality.utils.defaults import Defaults
 from factuality.utils.options import Options
@@ -204,14 +205,28 @@ def main():
         logging.change_log_level(logging.INFO)
     factuality = Factuality(options)
     conclusion, checked_claims, statement = factuality.check(args.statement)
-    statement_part = re.sub(r'[^\x00-\x7F]+', '', statement[:10].replace(' ', '_'))
+    statement_part = re.sub(r'[^\x00-\x7F]+', '', statement[:20].replace(' ', '_'))
     current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{statement_part}_{current_time}"
+
     if options.output_format == "markdown":
         with open(f"{options.output_path}/{filename}.md", "w") as f:
             markdown_text = factuality.convert_conclusions_to_markdown(
                 checked_claims, statement, conclusion
             )
+
+            try:
+                gist_manager = GistManager()
+
+                gist_manager.create_gist(
+                    content=markdown_text,
+                    filename=f"{filename}.md",
+                    description=f"{conclusion.description[:254]}",
+                    public=True
+                )
+            except Exception as e:
+                print(f"Error creating gist: {str(e)}")
+
             f.write(markdown_text)
     elif options.output_format == "json":
         with open(f"{options.output_path}/{filename}.json", "w") as f:
@@ -229,6 +244,19 @@ def main():
         markdown_text = factuality.convert_conclusions_to_markdown(
             checked_claims, statement, conclusion
         )
+
+        try:
+            gist_manager = GistManager()
+
+            gist_manager.create_gist(
+                content=markdown_text,
+                filename=f"{filename}.md",
+                description=f"{conclusion.description[:254]}",
+                public=True
+            )
+        except Exception as e:
+            print(f"Error creating gist: {str(e)}")
+
         console = Console()
         console.print(Markdown(markdown_text))
         pass

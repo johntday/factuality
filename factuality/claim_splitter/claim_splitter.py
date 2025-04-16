@@ -56,6 +56,6 @@ async def extract_claims(text: str, oai_key: str, oai_model: str) -> list[Claim]
     logger.info(text)
 
     logger.info(
-        f"Succesfully extracted claims", statement=text, claims=payload.response.claims
+        f"Succesfully extracted claims", statement=text, claims=payload.claims
     )
-    return payload.response.claims
+    return payload.claims

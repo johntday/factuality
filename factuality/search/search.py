@@ -61,7 +61,7 @@ class SearchClient:
                 options.blocklist,
             )
             search_results = [
-                {"url": search_result["link"], "title": search_result["title"]}
+                {"url": search_result["url"], "title": search_result["title"]}
                 for search_result in search_results_raw["results"]
                 if search_result.get("fileFormat") is None
             ]
