@@ -16,7 +16,7 @@ Provide conclusion based on statement and `claims`
 > Based on [long-form-factuality](https://arxiv.org/abs/2403.18802) ->
 > [github](https://github.com/google-deepmind/long-form-factuality)
 
-![Demo of factuality](./assets/demo.svg) 
+
 
 ## Quick start
 
