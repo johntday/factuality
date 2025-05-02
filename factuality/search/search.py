@@ -1,3 +1,4 @@
+import os
 from enum import Enum
 from typing import Literal
 from factuality.search.bing.bing_search import BingSearchClient
@@ -16,6 +17,11 @@ logger = structlog.get_logger(__name__)
 class SearchResults(BaseModel):
     url: str
     text: str
+
+def log_search_results(search_results):
+    with open(os.getenv('LOGS_SOURCE'), "a") as f:
+        for search_result in search_results:
+            f.write(search_result['url'] + '\n')
 
 
 class SearchClient:
@@ -67,6 +73,9 @@ class SearchClient:
             ]
         else:
             raise ValueError(f"No loader found for search_engine type: {search_engine}")
+
+        # log_search_results(search_results)
+
         if reference:
             search_results.insert(0,{"url": reference, "title": "Reference from statement"})
         search_results_txt = []

@@ -1,5 +1,4 @@
 from tavily import TavilyClient
-import requests
 
 class TavilySearchClient:
     tavily_client = None
@@ -18,20 +17,11 @@ class TavilySearchClient:
         Returns:
         dict: The JSON response from the API.
         """
-        # params = {'mkt': "en-us", 'count': maximum_search_results}
-        # headers = {'Ocp-Apim-Subscription-Key': self.subscription_key}
-        #
-        # q = query
-        # if len(allowlist) > 0:
-        #     q += " " + " OR ".join(map(lambda x: f"site:{x}", allowlist))
-        # elif len(blocklist) > 0 and len(allowlist) == 0:
-        #     q += " " + " OR ".join(map(lambda x: f"-site:{x}", blocklist))
-        # params['q'] = q
 
-        response = self.tavily_client.search(query)
+        response = self.tavily_client.search(
+            query,
+            max_results=maximum_search_results,
+            exclude_domains=blocklist,
+        )
 
         return response
-
-    # from tavily import TavilyClient
-    # tavily_client = TavilyClient(api_key="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")
-    # response = tavily_client.search("Who is Leo Messi?")

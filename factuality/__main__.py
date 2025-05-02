@@ -218,7 +218,7 @@ def main():
             try:
                 gist_manager = GistManager()
 
-                gist_manager.create_gist(
+                response = gist_manager.create_gist(
                     content=markdown_text,
                     filename=f"{filename}.md",
                     description=f"{conclusion.description[:254]}",
@@ -248,7 +248,7 @@ def main():
         try:
             gist_manager = GistManager()
 
-            gist_manager.create_gist(
+            response = gist_manager.create_gist(
                 content=markdown_text,
                 filename=f"{filename}.md",
                 description=f"{conclusion.description[:254]}",
