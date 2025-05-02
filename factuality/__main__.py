@@ -4,6 +4,7 @@ import os
 import re
 from dotenv import load_dotenv
 
+from factuality.api.db import update_to_database
 from factuality.api.gist import GistManager
 from factuality.utils import logging
 from factuality.utils.defaults import Defaults
@@ -26,6 +27,12 @@ def main():
         type=str,
         help="Statement to fact-check can be text or path to a text file",
         required=True,
+    )
+    parser.add_argument(
+        "--id",
+        type=str,
+        help="tweet id",
+        required=False,
     )
     parser.add_argument(
         "--output",
@@ -188,6 +195,7 @@ def main():
         search_extract_article_overlap=args.search_extract_article_overlap,
         maximum_search_results=args.maximum_search_results,
         output_format=args.output,
+        tweet_id=args.id,
         output_path=args.output_path,
         search_engine=args.search_engine,
         allowlist=args.allowlist,
@@ -209,42 +217,7 @@ def main():
     current_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{statement_part}_{current_time}"
 
-    if options.output_format == "markdown":
-        with open(f"{options.output_path}/{filename}.md", "w") as f:
-            markdown_text = factuality.convert_conclusions_to_markdown(
-                checked_claims, statement, conclusion
-            )
-
-            try:
-                gist_manager = GistManager()
-
-                response = gist_manager.create_gist(
-                    content=markdown_text,
-                    filename=f"{filename}.md",
-                    description=f"{conclusion.description[:254]}",
-                    public=True
-                )
-            except Exception as e:
-                print(f"Error creating gist: {str(e)}")
-
-            f.write(markdown_text)
-    elif options.output_format == "json":
-        with open(f"{options.output_path}/{filename}.json", "w") as f:
-            dict = {
-                    "checked_claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
-                    "statement": statement,
-                    "conclusion": conclusion.model_dump(by_alias=True),
-                }
-            json.dump(
-                dict,
-                f,
-                indent=4,
-            )
-    elif options.output_format == "console":
-        markdown_text = factuality.convert_conclusions_to_markdown(
-            checked_claims, statement, conclusion
-        )
-
+    def do_gist(markdown_text: str, filename: str) -> str | None:
         try:
             gist_manager = GistManager()
 
@@ -254,11 +227,55 @@ def main():
                 description=f"{conclusion.description[:254]}",
                 public=True
             )
+            return response['html_url']
         except Exception as e:
             print(f"Error creating gist: {str(e)}")
 
+    if options.output_format == "markdown":
+        with open(f"{options.output_path}/{filename}.md", "w") as f:
+            markdown_text = factuality.convert_conclusions_to_markdown(
+                checked_claims, statement, conclusion
+            )
+            do_gist(markdown_text, filename)
+            f.write(markdown_text)
+    elif options.output_format == "json":
+        markdown_text = factuality.convert_conclusions_to_markdown(
+            checked_claims, statement, conclusion
+        )
+
+        gist_url = do_gist(markdown_text, filename)
+
+        tweet = {
+            'id': options.tweet_id,
+            'factuality': {
+                "statement": statement,
+                "claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
+                "conclusion": conclusion.model_dump(by_alias=True),
+            },
+            'gist_url': gist_url,
+        }
+        update_to_database(tweet)
+        # with open(f"{options.output_path}/{filename}.json", "w") as f:
+        #     dict = {
+        #             "checked_claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
+        #             "statement": statement,
+        #             "conclusion": conclusion.model_dump(by_alias=True),
+        #         }
+        #     json.dump(
+        #         dict,
+        #         f,
+        #         indent=4,
+        #     )
+    elif options.output_format == "console":
+        markdown_text = factuality.convert_conclusions_to_markdown(
+            checked_claims, statement, conclusion
+        )
+
+        gist_url = do_gist(markdown_text, filename)
+
         console = Console()
         console.print(Markdown(markdown_text))
+        console.print(gist_url)
         pass
 
 

@@ -14,5 +14,6 @@ dependencies = [
   "rich",
   "pydantic",
   "lxml[html_clean]",
-  "Pillow"
+  "Pillow",
+  "psycopg2-binary>=2.9.10",
 ]

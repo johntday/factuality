@@ -4,6 +4,7 @@ import json
 class Options:
     def __init__(
         self,
+        tweet_id,
         oai_api_key,
         bing_search_v7_subscription_key = None,
         bing_search_v7_endpoint = Defaults.BING_SEARCH_V7_ENDPOINT.value,
@@ -24,6 +25,7 @@ class Options:
         google_search_cx = None,
         tavily_api_key = None,
     ):
+        self.tweet_id = tweet_id
         self.oai_api_key = oai_api_key
         self.bing_search_v7_subscription_key = bing_search_v7_subscription_key
         self.bing_search_v7_endpoint = bing_search_v7_endpoint

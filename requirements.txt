@@ -29,6 +29,7 @@ openai==1.76.2
 packaging==25.0
 pathvalidate==3.2.3
 pillow==11.2.1
+psycopg2-binary==2.9.10
 pydantic==2.11.4
 pydantic-core==2.33.2
 pygments==2.19.1
