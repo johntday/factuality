@@ -3,7 +3,6 @@ import json
 import os
 import re
 from dotenv import load_dotenv
-
 from factuality.api.db import update_to_database
 from factuality.api.gist import GistManager
 from factuality.utils import logging
@@ -15,6 +14,11 @@ from rich.markdown import Markdown
 
 load_dotenv()
 import argparse
+
+def strtobool(val: str | bool) -> bool:
+    if isinstance(val, bool):
+        return val
+    return val.lower() in ("true", "1", "t")
 
 
 def main():
@@ -206,6 +210,9 @@ def main():
         tavily_api_key=args.tavily_api_key,
         google_search_cx=args.google_search_cx,
     )
+    if not options.tweet_id and options.output_format == "json":
+        raise ValueError("Missing tweet ID parameter '--id'")
+
     logging.setup_structlog()
     if args.log_level:
         logging.change_log_level(args.log_level)
@@ -231,19 +238,22 @@ def main():
         except Exception as e:
             print(f"Error creating gist: {str(e)}")
 
+    gist_url = None
     if options.output_format == "markdown":
         with open(f"{options.output_path}/{filename}.md", "w") as f:
             markdown_text = factuality.convert_conclusions_to_markdown(
                 checked_claims, statement, conclusion
             )
-            do_gist(markdown_text, filename)
+            if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
+                do_gist(markdown_text, filename)
             f.write(markdown_text)
     elif options.output_format == "json":
         markdown_text = factuality.convert_conclusions_to_markdown(
             checked_claims, statement, conclusion
         )
 
-        gist_url = do_gist(markdown_text, filename)
+        if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
+            gist_url = do_gist(markdown_text, filename)
 
         tweet = {
             'id': options.tweet_id,
@@ -271,7 +281,8 @@ def main():
             checked_claims, statement, conclusion
         )
 
-        gist_url = do_gist(markdown_text, filename)
+        if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
+            gist_url = do_gist(markdown_text, filename)
 
         console = Console()
         console.print(Markdown(markdown_text))
