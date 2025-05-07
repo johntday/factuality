@@ -264,18 +264,13 @@ def main():
             },
             'gist_url': gist_url,
         }
-        # update_to_database(tweet)
-        # with open(f"{options.output_path}/{filename}.json", "w") as f:
-        #     dict = {
-        #             "checked_claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
-        #             "statement": statement,
-        #             "conclusion": conclusion.model_dump(by_alias=True),
-        #         }
-        #     json.dump(
-        #         dict,
-        #         f,
-        #         indent=4,
-        #     )
+
+        output_json = {
+            "claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
+            "statement": statement,
+            "conclusion": conclusion.model_dump(by_alias=True),
+        }
+        print( json.dumps( output_json ) )
     elif options.output_format == "console":
         markdown_text = factuality.convert_conclusions_to_markdown(
             checked_claims, statement, conclusion
