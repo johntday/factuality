@@ -21,6 +21,7 @@ class TavilySearchClient:
         response = self.tavily_client.search(
             query,
             max_results=maximum_search_results,
+            include_domains=allowlist,
             exclude_domains=blocklist,
         )
 
