@@ -264,7 +264,7 @@ def main():
             },
             'gist_url': gist_url,
         }
-        update_to_database(tweet)
+        # update_to_database(tweet)
         # with open(f"{options.output_path}/{filename}.json", "w") as f:
         #     dict = {
         #             "checked_claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
