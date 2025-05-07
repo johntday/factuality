@@ -3,7 +3,6 @@ import json
 import os
 import re
 from dotenv import load_dotenv
-from factuality.api.db import update_to_database
 from factuality.api.gist import GistManager
 from factuality.utils import logging
 from factuality.utils.defaults import Defaults
@@ -255,7 +254,7 @@ def main():
         if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
             gist_url = do_gist(markdown_text, filename)
 
-        tweet = {
+        output_json = {
             'id': options.tweet_id,
             'factuality': {
                 "statement": statement,
@@ -265,11 +264,6 @@ def main():
             'gist_url': gist_url,
         }
 
-        output_json = {
-            "claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
-            "statement": statement,
-            "conclusion": conclusion.model_dump(by_alias=True),
-        }
         print( json.dumps( output_json ) )
     elif options.output_format == "console":
         markdown_text = factuality.convert_conclusions_to_markdown(
