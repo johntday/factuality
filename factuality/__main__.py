@@ -275,7 +275,8 @@ def main():
 
         console = Console()
         console.print(Markdown(markdown_text))
-        console.print(gist_url)
+        if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
+            console.print(gist_url)
         pass
 
 
