@@ -260,11 +260,13 @@ def main():
             'id': options.tweet_id,
             'factuality': {
                 "statement": statement,
-                "claims": transform_claims( [claim.model_dump(by_alias=True) for claim in checked_claims] ),
+                "claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
                 "conclusion": conclusion.model_dump(by_alias=True),
             },
             # 'gist_url': gist_url,
         }
+
+        output_json = transform_claims(output_json)
 
         print( json.dumps( output_json ) )
     elif options.output_format == "console":
@@ -304,8 +306,15 @@ def transform_claims(data):
         })
 
     # Rebuild the output structure
-    claims = list(claim_map.values()),
-    return claims
+    output = {
+        "id": data["id"],
+        "factuality": {
+            "statement": data["factuality"]["statement"],
+            "claims": list(claim_map.values()),
+            "conclusion": data["factuality"]["conclusion"]
+        },
+    }
+    return output
 
 
 if __name__ == "__main__":
