@@ -10,6 +10,8 @@ from factuality.utils.options import Options
 from factuality.runner.factuality import Factuality
 from rich.console import Console
 from rich.markdown import Markdown
+from collections import defaultdict
+
 
 load_dotenv()
 import argparse
@@ -247,21 +249,21 @@ def main():
                 do_gist(markdown_text, filename)
             f.write(markdown_text)
     elif options.output_format == "json":
-        markdown_text = factuality.convert_conclusions_to_markdown(
-            checked_claims, statement, conclusion
-        )
+        # markdown_text = factuality.convert_conclusions_to_markdown(
+        #     checked_claims, statement, conclusion
+        # )
 
-        if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
-            gist_url = do_gist(markdown_text, filename)
+        # if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
+        #     gist_url = do_gist(markdown_text, filename)
 
         output_json = {
             'id': options.tweet_id,
             'factuality': {
                 "statement": statement,
-                "claims": [claim.model_dump(by_alias=True) for claim in checked_claims],
+                "claims": transform_claims( [claim.model_dump(by_alias=True) for claim in checked_claims] ),
                 "conclusion": conclusion.model_dump(by_alias=True),
             },
-            'gist_url': gist_url,
+            # 'gist_url': gist_url,
         }
 
         print( json.dumps( output_json ) )
@@ -278,6 +280,32 @@ def main():
         if strtobool(os.getenv('GITHUB_GIST_ENABLED')):
             console.print(gist_url)
         pass
+
+
+def transform_claims(data):
+    # Process claims into grouped structure
+    claim_map = defaultdict(lambda: {
+        "claim": None,
+        "reference": None,
+        "verification_query": None,
+        "evidence": []
+    })
+
+    for claim in data["factuality"]["claims"]:
+        key = (claim["claim"], claim["verification_query"])
+        entry = claim_map[key]
+        entry["claim"] = claim["claim"]
+        entry["reference"] = claim.get("reference")
+        entry["verification_query"] = claim["verification_query"]
+        entry["evidence"].append({
+            "result": claim["result"],
+            "source_reference": claim["source_reference"],
+            "source_quote": claim["source_quote"]
+        })
+
+    # Rebuild the output structure
+    claims = list(claim_map.values()),
+    return claims
 
 
 if __name__ == "__main__":
